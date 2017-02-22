@@ -1,5 +1,6 @@
 package es.udc.fic.mri_indexer;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,10 +37,16 @@ public class App {
     	final Path indexDir = Paths.get(index);
         final Path docDir = Paths.get(docs);
         if (!Files.isReadable(docDir)) {
-          System.out.println("Document directory '" + docDir.toAbsolutePath() + "' does not exist or is not readable, please check the path");
+          System.err.println("Document directory '" + docDir.toAbsolutePath() + "' does not exist or is not readable, please check the path");
           System.exit(1);
         }
     	
     	Indexer indexer = new Indexer(indexDir,docDir);
+    	try {
+			long count = indexer.index();
+	    	System.out.println("Indexados " + count + " artículos.");
+		} catch (IOException e) {
+			System.err.println("Falló la indexación :^(");
+		}
     }
 }
