@@ -37,27 +37,25 @@ public class Indexer {
 		this.docsPath = docsPath;
 	}
 
-	public long index() throws IOException {
-		long count = 0;
+	public void index() throws IOException {
 		Directory dir = FSDirectory.open(indexPath);
 		Analyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 		iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
 		try (IndexWriter writer = new IndexWriter(dir, iwc)) {
-			count = indexDocs(writer, docsPath);
+			indexDocs(writer, docsPath);
 		}
-		return count;
 	}
 
-	private long indexDocs(final IndexWriter writer, Path path) throws IOException {
-		long accum = 0;
+	private void indexDocs(final IndexWriter writer, Path path) throws IOException {
 		if (Files.isDirectory(path)) {
 			Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					try {
-						if(file.getFileName().endsWith(".sgm"))
+						if(file.getFileName().toString().endsWith("sgm")) {
 							indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
+						}
 					} catch (IOException ignore) {
 						// don't index files that can't be read.
 					}
@@ -65,16 +63,14 @@ public class Indexer {
 				}
 			});
 		} else {
-			accum += indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
+			indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
 		}
-		return accum;
 	}
 
-	private long indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
+	private void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
 		
 		SimpleDateFormat sdf = new SimpleDateFormat("d-MMM-YYYY HH:mm:ss.SS");
 		String hostname = execReadToString("hostname");
-		long indexed = 0;
 		
 		try (Scanner scan = new Scanner(file)) {
 
@@ -82,9 +78,8 @@ public class Indexer {
 			scan.useDelimiter("\\A");
 			StringBuffer content = new StringBuffer(scan.next());
 			List<List<String>> fields = Reuters21578Parser.parseString(content);
-			indexed = fields.size();
-		
-			for(int artn=0; artn<indexed; artn++) {
+					
+			for(int artn=0; artn<fields.size(); artn++) {
 				List<String> art = fields.get(artn);
 				
 				// make a new, empty document
@@ -113,7 +108,7 @@ public class Indexer {
 				try {				
 					date = sdf.parse(art.get(i++)).toString();
 				} catch (ParseException e) {
-					System.err.println("Error indexando " + hostname
+					System.err.println("Error indexando " + hostname.split("\n")[0]
 							+ ":" + file.toString() + "#" + artn
 							+ " : No se pudo analizar la fecha, utilizando fecha por defecto");
 				}
@@ -123,8 +118,6 @@ public class Indexer {
 				writer.addDocument(doc);
 			}
 		}
-		
-		return indexed;
 	}
 	
     private static String execReadToString(String execCommand) throws IOException {

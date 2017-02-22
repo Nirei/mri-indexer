@@ -43,8 +43,7 @@ public class App {
     	
     	Indexer indexer = new Indexer(indexDir,docDir);
     	try {
-			long count = indexer.index();
-	    	System.out.println("Indexados " + count + " artículos.");
+			indexer.index();
 		} catch (IOException e) {
 			System.err.println("Falló la indexación :^(");
 		}
