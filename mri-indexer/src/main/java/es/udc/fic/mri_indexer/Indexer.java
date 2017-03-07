@@ -10,6 +10,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -29,13 +30,15 @@ import es.udc.fic.mri_indexer.parsers.Reuters21578Parser;
 
 public class Indexer {
 
-	final Path indexPath;
-	final Path docsPath;
-	final OpenMode openMode;
+	private final Path indexPath;
+	private final Path docsPath;
+	private final OpenMode openMode;
+	static final String DATE_FORMAT = "dd-MMM-yyyy HH:mm:ss.SS";
+	static final SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT,Locale.ENGLISH);
 
-	public Indexer(Path indexPath, Path docsPath, OpenMode openMode) {
+	public Indexer(Path indexPath, Path docs, OpenMode openMode) {
 		this.indexPath = indexPath;
-		this.docsPath = docsPath;
+		this.docsPath = docs;
 		this.openMode = openMode;
 	}
 
@@ -56,7 +59,7 @@ public class Indexer {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 					try {
-						if(file.getFileName().toString().endsWith("sgm")) {
+						if (file.getFileName().toString().endsWith("sgm")) {
 							indexDoc(writer, file, attrs.lastModifiedTime().toMillis());
 						}
 					} catch (IOException ignore) {
@@ -71,23 +74,23 @@ public class Indexer {
 	}
 
 	private void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
-		
-		SimpleDateFormat sdf = new SimpleDateFormat("d-MMM-YYYY HH:mm:ss.SS");
+
 		String hostname = execReadToString("hostname");
-		
+
 		try (Scanner scan = new Scanner(file)) {
 
-			// Leemos el archivo entero a un StringBuffer para cumplir con la interfaz del parser
+			// Leemos el archivo entero a un StringBuffer para cumplir con la
+			// interfaz del parser
 			scan.useDelimiter("\\A");
 			StringBuffer content = new StringBuffer(scan.next());
 			List<List<String>> fields = Reuters21578Parser.parseString(content);
-					
-			for(int artn=0; artn<fields.size(); artn++) {
+
+			for (int artn = 0; artn < fields.size(); artn++) {
 				List<String> art = fields.get(artn);
-				
+
 				// make a new, empty document
 				Document doc = new Document();
-				
+
 				// Host del que proceden los archivos
 				Field hostField = new StringField("host", hostname, Store.YES);
 				doc.add(hostField);
@@ -108,28 +111,27 @@ public class Indexer {
 				Field datelineField = new StringField("dateline", art.get(i++), Store.NO);
 				doc.add(datelineField);
 				String date = "Thu Jan 01 00:00:00 UTC 1970";
-				try {				
-					date = sdf.parse(art.get(i++)).toString();
+				try {
+					date = sdf.parse(art.get(i++).trim()).toString();
 				} catch (ParseException e) {
-					System.err.println("Error indexando " + hostname.split("\n")[0]
-							+ ":" + file.toString() + "#" + artn
-							+ " : No se pudo analizar la fecha, utilizando fecha por defecto");
+					System.err.println("Error indexando " + hostname.split("\n")[0] + ":" + file.toString() + "#" + artn
+							+ " : Utilizando fecha por defecto. " + e.getMessage());
 				}
 				Field dateField = new StringField("date", date, Store.NO);
 				doc.add(dateField);
-				
+
 				writer.addDocument(doc);
 			}
 		}
 	}
-	
-    private static String execReadToString(String execCommand) throws IOException {
-        Process proc = Runtime.getRuntime().exec(execCommand);
-        try (InputStream stream = proc.getInputStream()) {
-            try (Scanner s = new Scanner(stream)) {
-            	s.useDelimiter("\\A");
-                return s.hasNext() ? s.next() : "";
-            }
-        }
-    }
+
+	private static String execReadToString(String execCommand) throws IOException {
+		Process proc = Runtime.getRuntime().exec(execCommand);
+		try (InputStream stream = proc.getInputStream()) {
+			try (Scanner s = new Scanner(stream)) {
+				s.useDelimiter("\\A");
+				return s.hasNext() ? s.next() : "";
+			}
+		}
+	}
 }

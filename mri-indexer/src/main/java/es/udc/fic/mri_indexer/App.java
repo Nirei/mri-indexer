@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 
@@ -14,29 +16,35 @@ import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 public class App {
 	
     final static String usage = "java es.udc.fic.mri_indexer.IndexFiles"
-    		+ " -index INDEX_PATH -coll DOC_PATH [-openmode CREATE|CREATE_OR_APPEND|APPEND]";
+    		+ " -index INDEX_PATH -coll DOC_PATH|-colls DOC_PATH1 ... DOC_PATHN [-openmode CREATE|CREATE_OR_APPEND|APPEND]";
 
     public static void main( String[] args )
     {
     	String index = null;
-    	String docs = null;
+    	List<String> colls = null;
     	String om = null;
     	OpenMode openMode = null;
     	
     	for(int i=0; i<args.length; i++) {
-    		if(args[i].startsWith("-index")) {
+    		if(args[i].equals("-index")) {
     			index = args[++i];
-    		}
-    		else if(args[i].startsWith("-coll")) {
-    			docs = args[++i];
-    		}
-    		else if(args[i].startsWith("-openmode")) {
+    		} else if(args[i].startsWith("-coll")) {
+    			colls = new ArrayList<String>();
+    			for(int j=i+1; j<args.length; j++) {
+    				if(args[j].startsWith("-")) {
+    					i=j;
+    					j=args.length;
+    				} else {
+    					colls.add(args[j]);
+    				}
+    			}
+    		} else if(args[i].equals("-openmode")) {
     			om = args[++i];
     		}
     	}
     	
     	if(index == null
-    			|| docs == null) {
+    			|| colls.isEmpty()) {
 			System.err.println(usage);
 			System.exit(1);
     	}
@@ -54,15 +62,22 @@ public class App {
     	}
 
     	final Path indexDir = Paths.get(index);
-        final Path docDir = Paths.get(docs);
-        if (!Files.isReadable(docDir)) {
-          System.err.println("Document directory '" + docDir.toAbsolutePath() + "' does not exist or is not readable, please check the path");
-          System.exit(1);
-        }
-    	
-    	Indexer indexer = new Indexer(indexDir,docDir,openMode);
+    	final List<Path> docs = new ArrayList<Path>();
+    	for(String s: colls) {
+    		Path doc = Paths.get(s);
+            if (!Files.isReadable(doc)) {
+                System.err.println("Document directory '" + doc.toAbsolutePath() + "' does not exist or is not readable, please check the path");
+                System.exit(1);
+            }
+            docs.add(doc);
+    	}
     	try {
-			indexer.index();
+	    	Indexer indexer = new Indexer(indexDir, docs.get(0), openMode);
+	    	indexer.index();
+	    	for(int i=1; i<docs.size(); i++) {
+	    		indexer = new Indexer(indexDir, docs.get(i), OpenMode.APPEND); // A partir de aquí, usamos APPEND para no sobreescribir
+	    		indexer.index();
+	    	}
 		} catch (IOException e) {
 			System.err.println("Falló la indexación :^(");
 		}
