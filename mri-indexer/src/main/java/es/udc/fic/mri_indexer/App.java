@@ -17,7 +17,7 @@ public class App {
 	
     final static String usage = "java es.udc.fic.mri_indexer.IndexFiles"
     		+ " -index INDEX_PATH -coll DOC_PATH|-colls DOC_PATH1 ... DOC_PATHN [-openmode CREATE|CREATE_OR_APPEND|APPEND]";
-
+    
     public static void main( String[] args )
     {
     	String index = null;
@@ -25,23 +25,7 @@ public class App {
     	String om = null;
     	OpenMode openMode = null;
     	
-    	for(int i=0; i<args.length; i++) {
-    		if(args[i].equals("-index")) {
-    			index = args[++i];
-    		} else if(args[i].startsWith("-coll")) {
-    			colls = new ArrayList<String>();
-    			for(int j=i+1; j<args.length; j++) {
-    				if(args[j].startsWith("-")) {
-    					i=j;
-    					j=args.length;
-    				} else {
-    					colls.add(args[j]);
-    				}
-    			}
-    		} else if(args[i].equals("-openmode")) {
-    			om = args[++i];
-    		}
-    	}
+
     	
     	if(index == null
     			|| colls.isEmpty()) {
