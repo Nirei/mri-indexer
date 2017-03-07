@@ -31,17 +31,20 @@ public class Indexer {
 
 	final Path indexPath;
 	final Path docsPath;
+	final OpenMode openMode;
 
-	public Indexer(Path indexPath, Path docsPath) {
+	public Indexer(Path indexPath, Path docsPath, OpenMode openMode) {
 		this.indexPath = indexPath;
 		this.docsPath = docsPath;
+		this.openMode = openMode;
 	}
 
 	public void index() throws IOException {
 		Directory dir = FSDirectory.open(indexPath);
 		Analyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
-		iwc.setOpenMode(OpenMode.CREATE_OR_APPEND);
+		System.out.println("Opening index for " + openMode);
+		iwc.setOpenMode(openMode);
 		try (IndexWriter writer = new IndexWriter(dir, iwc)) {
 			indexDocs(writer, docsPath);
 		}
