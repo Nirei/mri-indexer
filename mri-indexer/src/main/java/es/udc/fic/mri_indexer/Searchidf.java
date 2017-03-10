@@ -17,9 +17,6 @@ import org.apache.lucene.index.MultiFields;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.TermsEnum;
-import org.apache.lucene.queryparser.classic.QueryParser;
-import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.Query;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.util.BytesRef;
 
@@ -50,7 +47,7 @@ public class Searchidf {
 			Fields fields = MultiFields.getFields(reader);
 			Terms terms = fields.terms(field);
 			TermsEnum termsEnum = terms.iterator();
-			List<String> topdocs = new ArrayList<String>();
+			List<String> topterms = new ArrayList<String>();
 			
 			 while (termsEnum.next() !=null){
 				 //termsEnum.next();
@@ -61,16 +58,16 @@ public class Searchidf {
 				 BytesRef nombre = termsEnum.term();
 				 String nombrestring = nombre.utf8ToString();
 				 String termino = idf + " " + nombrestring;
-				 topdocs.add(termino);		
+				 topterms.add(termino);		
 			}
 			 //Ordenamos la lista por idf
-			 Collections.sort(topdocs);
+			 Collections.sort(topterms);
 			 if (poor){
-				 Collections.reverse(topdocs);
+				 Collections.reverse(topterms);
 			 }
-			 //Mostrar los n mejores
-			 for (int j = 0; j<numeroTop && j<topdocs.size(); j++){
-				 System.out.println(topdocs.get(j));
+			 //Mostrar los n mejores//peores
+			 for (int j = 0; j<numeroTop && j<topterms.size(); j++){
+				 System.out.println((j+1) + ". " + topterms.get(j));
 				
 			 }
 		}catch (IOException e){
