@@ -4,7 +4,7 @@ import java.io.IOException;
 
 public class RunnableIndexer implements Runnable {
 	
-	private final Indexer indexer;
+	public final Indexer indexer;
 	
 	public RunnableIndexer(Indexer indexer) {
 		this.indexer = indexer;
@@ -12,6 +12,8 @@ public class RunnableIndexer implements Runnable {
 
 	@Override
 	public void run() {
+		String tName = Thread.currentThread().getName();
+		System.out.println("Thread " + tName + " started: Processing indexer " + indexer);
 		try {
 			indexer.index();
 		} catch (IOException e) {

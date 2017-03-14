@@ -12,6 +12,7 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -30,11 +31,17 @@ import es.udc.fic.mri_indexer.parsers.Reuters21578Parser;
 
 public class Indexer {
 
-	private final Path indexPath;
-	private final Path docsPath;
-	private final OpenMode openMode;
-	static final String DATE_FORMAT = "dd-MMM-yyyy HH:mm:ss.SS";
-	static final SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT,Locale.ENGLISH);
+	static final String DATE_FORMAT = "d-MMM-yyyy HH:mm:ss.SS";
+	
+	// Entero concurrente para la cantidad de bytes indexados por este indexer
+	/**
+	 * Este entero atómico representa la cantidad de bytes procesados por el indice.
+	 */
+	public AtomicLong indexedBytes = new AtomicLong(0);
+	protected final Path indexPath;
+	protected final Path docsPath;
+	protected final OpenMode openMode;
+	final SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT,Locale.ENGLISH); // SimpleDateFormat is not thread-safe
 
 	public Indexer(Path indexPath, Path docs, OpenMode openMode) {
 		this.indexPath = indexPath;
@@ -46,14 +53,13 @@ public class Indexer {
 		Directory dir = FSDirectory.open(indexPath);
 		Analyzer analyzer = new StandardAnalyzer();
 		IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
-		System.out.println("Opening index for " + openMode);
 		iwc.setOpenMode(openMode);
 		try (IndexWriter writer = new IndexWriter(dir, iwc)) {
 			indexDocs(writer, docsPath);
 		}
 	}
 
-	private void indexDocs(final IndexWriter writer, Path path) throws IOException {
+	protected void indexDocs(final IndexWriter writer, Path path) throws IOException {
 		if (Files.isDirectory(path)) {
 			Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
 				@Override
@@ -73,13 +79,12 @@ public class Indexer {
 		}
 	}
 
-	private void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
-
+	protected void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
 		String hostname = execReadToString("hostname");
 
 		try (Scanner scan = new Scanner(file)) {
 
-			// Leemos el archivo entero a un StringBuffer para cumplir con la
+			// Leemos el archivo entero a un StringBuffer como exige la
 			// interfaz del parser
 			scan.useDelimiter("\\A");
 			StringBuffer content = new StringBuffer(scan.next());
@@ -112,16 +117,19 @@ public class Indexer {
 				doc.add(datelineField);
 				String date = "Thu Jan 01 00:00:00 UTC 1970";
 				try {
-					date = sdf.parse(art.get(i++).trim()).toString();
-				} catch (ParseException e) {
+					date = sdf.parse(art.get(i).trim()).toString();
+				} catch (ParseException | NumberFormatException e) {
 					System.err.println("Error indexando " + hostname.split("\n")[0] + ":" + file.toString() + "#" + artn
 							+ " : Utilizando fecha por defecto. " + e.getMessage());
 				}
 				Field dateField = new StringField("date", date, Store.NO);
 				doc.add(dateField);
-
+				
+				//System.out.println(titleField.stringValue() + " " + topicsField.stringValue() + " " + datelineField.stringValue() + " " + dateField.stringValue());
 				writer.addDocument(doc);
 			}
+			
+			indexedBytes.addAndGet(file.toFile().length());
 		}
 	}
 
@@ -133,5 +141,10 @@ public class Indexer {
 				return s.hasNext() ? s.next() : "";
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "Indexer [indexPath=" + indexPath + ", docsPath=" + docsPath + "]";
 	}
 }

@@ -17,6 +17,7 @@ class CommandLine {
 			if(args[i].startsWith("-")) {
 				if(sb.length() != 0) {
 					sb.deleteCharAt(sb.length()-1); // remove trailing whitespace
+					System.out.println("Parsed " + current + " argument with " + sb.toString() + " options");
 					opts.put(current, sb.toString()); // add to dict
 					sb.setLength(0); // reset length
 				}
@@ -25,10 +26,36 @@ class CommandLine {
 				sb.append(args[i] + " ");
 			}
 		}
+		
+		// Add remaining options
+		if(sb.length() != 0) {
+			sb.deleteCharAt(sb.length()-1); // remove trailing whitespace
+			System.out.println("Parsed " + current + " argument with " + sb.toString() + " options");
+			opts.put(current, sb.toString()); // add to dict
+			sb.setLength(0); // reset length
+		}
+		
+		System.out.println("Parsed options " + opts.keySet());
 	}
-	
+
+	/**
+	 * Obtiene un argumento de línea de comandos por su nombre.
+	 * @param name - nombre del argumento
+	 * @return El argumento de línea de comandos especificado por name
+	 */
 	public String getOpt(String name) {
 		return opts.get(name);
+	}
+
+	/**
+	 * Como getOpt pero tira una excepción si no hay.
+	 * @param name
+	 * @return El argumento de línea de comandos especificado por name
+	 * @throws MissingArgumentException
+	 */
+	public String checkOpt(String name) throws MissingArgumentException {
+		if(!opts.containsKey(name)) throw new MissingArgumentException();
+		return getOpt(name);
 	}
 	
 	public boolean hasOpt(String name) {
@@ -47,8 +74,13 @@ class CommandLine {
 		for(int i=0; i<opts.length; i++) {
 			boolean partial = true;
 			for(int j=0; j<opts[i].length; j++) {
+				if(hasOpt(opts[i][j]))
+					System.out.println("We have opt " + opts[i][j]);
+				else
+					System.out.println("We dont have " + opts[i][j]);
 				partial &= hasOpt(opts[i][j]); // elementos del mismo array son necesarios (AND)
 			}
+			System.out.println("Result is " + partial);
 			result |= partial; // cada uno de los arrays es suficiente (OR)
 		}
 		return result;
@@ -93,5 +125,9 @@ class CommandLine {
 		String[] rebuildingOpts4 = {"-ya","-luego"};
 		String[][] rebuildingOpts = {rebuildingOpts1, rebuildingOpts2, rebuildingOpts3, rebuildingOpts4};
 		return checkPresent(rebuildingOpts);
+	}
+	
+	class MissingArgumentException extends Exception {
+		private static final long serialVersionUID = 7146926153071567017L;
 	}
 }
