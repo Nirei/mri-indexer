@@ -103,12 +103,11 @@ class CommandLine {
 	 * Establece si los argumentos entregados por línea de comandos corresponden
 	 * a una operación de procesamiento de índice (parte 2 de la práctica)
 	 */
-	public boolean isQuering() {
-		// TODO: Fixme
-		String[] queringOpts1 = {"-nose","-que"};
-		String[] queringOpts2 = {"-va","-aqui"};
-		String[] queringOpts3 = {"-asi","-que"};
-		String[] queringOpts4 = {"-ya","-luego"};
+	public boolean isSearching() {
+		String[] queringOpts1 = {"-indexin","-best_idfterms"};
+		String[] queringOpts2 = {"-indexin","-poor_idfterms"};
+		String[] queringOpts3 = {"-indexin","-best_tfidfterms"};
+		String[] queringOpts4 = {"-indexin","-poor_tfidfterms"};
 		String[][] queringOpts = {queringOpts1, queringOpts2, queringOpts3, queringOpts4};
 		return checkPresent(queringOpts);
 	}

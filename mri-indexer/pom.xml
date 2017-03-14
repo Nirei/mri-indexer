@@ -31,18 +31,11 @@
 	     <configuration>
 	      <mainClass>es.udc.fic.mri_indexer.App</mainClass>
 	      <arguments>
-	       <argument>-indexes1</argument>
+	       <argument>-indexin</argument>
 	       <argument>index</argument>
-	       <argument>index1</argument>
-	       <argument>index2</argument>
-	       <argument>index3</argument>
-	       <argument>-colls</argument>
-<!-- 	       <argument>collection</argument>
- -->	       <argument>collection1</argument>
-	       <argument>collection2</argument>
-	       <argument>collection3</argument>
-	       <argument>-om</argument>
-	       <argument>CREATE</argument>
+	       <argument>-best_tfidfterms</argument>
+	       <argument>title</argument>
+	       <argument>73</argument>
 	      </arguments>
 	     </configuration>
 	    </execution>

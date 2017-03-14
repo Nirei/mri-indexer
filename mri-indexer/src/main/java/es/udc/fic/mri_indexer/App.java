@@ -33,9 +33,9 @@ public class App {
     	if(cl.isIndexing()) {
     		System.out.println("Starting indexing");
     		indexing(cl); // primera parte de la práctica
-    	} else if(cl.isQuering()) {
+    	} else if(cl.isSearching()) {
     		System.out.println("Starting quering");
-    		quering(cl); // segunda
+    		searching(cl); // segunda
     	} else if(cl.isRebuilding()) {
     		System.out.println("Starting rebuilding");
     		rebuilding(cl); // tercera
@@ -132,7 +132,50 @@ public class App {
     	}
     }
     
-    public static void quering(CommandLine cl) {
+    public static void searching(CommandLine cl) {
+    	String indexin;
+    	Boolean poor;
+    	indexin = cl.getOpt("-indexin");
+    	if(cl.hasOpt("-best_idfterms")) {
+    		
+    		String [] argumentostemp = cl.getOpt("-best_idfterms").split(" ");
+    		String field = argumentostemp[0];
+    		int ranking = Integer.parseInt(argumentostemp[1]);
+    		poor = false;
+    	    Searchidf search = new Searchidf(Paths.get(indexin),field,ranking,poor);
+    		search.searching();
+    	}
+    	
+    	if(cl.hasOpt("-poor_idfterms")) {
+    		
+    		String [] argumentostemp = cl.getOpt("-poor_idfterms").split(" ");
+    		String field = argumentostemp[0];
+    		int ranking = Integer.parseInt(argumentostemp[1]);
+    		poor = true;
+    	    Searchidf search = new Searchidf(Paths.get(indexin),field,ranking,poor);
+    		search.searching();
+    	}
+    	
+    	if(cl.hasOpt("-best_tfidfterms")) {
+    		
+    		String [] argumentostemp = cl.getOpt("-best_tfidfterms").split(" ");
+    		String field = argumentostemp[0];
+    		int ranking = Integer.parseInt(argumentostemp[1]);
+    		poor = false;
+    	    SearchTfIdf search = new SearchTfIdf(Paths.get(indexin),field,ranking,poor);
+    		search.searching();
+    	}
+    	
+if(cl.hasOpt("-poor_tfidfterms")) {
+    		
+    		String [] argumentostemp = cl.getOpt("-poor_tfidfterms").split(" ");
+    		String field = argumentostemp[0];
+    		int ranking = Integer.parseInt(argumentostemp[1]);
+    		poor = true;
+    	    SearchTfIdf search = new SearchTfIdf(Paths.get(indexin),field,ranking,poor);
+    		search.searching();
+    	}
+    	
     	
     }
     

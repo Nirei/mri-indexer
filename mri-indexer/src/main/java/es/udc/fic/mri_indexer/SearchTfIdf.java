@@ -33,7 +33,7 @@ public class SearchTfIdf {
 		
 	}
 
-	public void calcularTfIdf() {
+	public void searching() {
 		try {
 			IndexReader reader;
 			reader = DirectoryReader.open(FSDirectory.open(indexFilePath));
