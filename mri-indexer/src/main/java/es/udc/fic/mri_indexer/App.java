@@ -1,13 +1,20 @@
 package es.udc.fic.mri_indexer;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+
+import es.udc.fic.mri_indexer.CommandLine.MissingArgumentException;
 
 /**
  * Hello world!
@@ -20,50 +27,127 @@ public class App {
     
     public static void main( String[] args )
     {
-    	String index = null;
-    	List<String> colls = null;
-    	String om = null;
-    	OpenMode openMode = null;
+    	CommandLine cl = new CommandLine();
+    	cl.triturar(args);
     	
-
-    	
-    	if(index == null
-    			|| colls.isEmpty()) {
+    	if(cl.isIndexing()) {
+    		System.out.println("Starting indexing");
+    		indexing(cl); // primera parte de la práctica
+    	} else if(cl.isQuering()) {
+    		System.out.println("Starting quering");
+    		quering(cl); // segunda
+    	} else if(cl.isRebuilding()) {
+    		System.out.println("Starting rebuilding");
+    		rebuilding(cl); // tercera
+    	} else {
+			System.err.println("Not enough arguments specified");
 			System.err.println(usage);
 			System.exit(1);
     	}
+    }
+    
+    public static void indexing(CommandLine cl) {
+    	OpenMode openMode = OpenMode.CREATE_OR_APPEND;
     	
-    	if(om == null) {
-    		openMode = OpenMode.CREATE_OR_APPEND;
+		try {
+			openMode = OpenMode.valueOf(cl.checkOpt("-om"));
+		} catch (IllegalArgumentException e) {
+			System.err.println("Invalid open mode specified");
+			System.err.println(usage);
+			System.exit(1);
+		} catch (MissingArgumentException e) {
+			System.out.println("No open mode specified, asumming CREATE_OR_APPEND");
+		}
+
+    	if(cl.hasOpt("-index")) {
+    		// single thread
+    		Path coll = null;
+			coll = Paths.get(cl.getOpt("-coll"));
+			Path index = Paths.get(cl.getOpt("-index"));
+			
+			Indexer indXr = new Indexer(index, coll, openMode);
+			try {
+				indXr.index();
+			} catch (IOException e) {
+				System.err.println("Falló la indexación :^(");
+			}
+			
     	} else {
+    		// multithread
+    		String[] indexes = null;
+    		String[] colls = null;
+			colls = cl.getOpt("-colls").split(" ");
+			List<Indexer> indexerList = new ArrayList<>();
+			
+			// Creamos una thread-pool de tantos hilos como procesadores
+    		int cores = Runtime.getRuntime().availableProcessors();
+    		ExecutorService executor = Executors.newFixedThreadPool(cores);
+			
+			if(cl.hasOpt("-indexes2")) {
+				// sin índices intermedios
+				String index = cl.getOpt("-indexes2");
+    			Path iPath = Paths.get(index);
+
+				for(int i=0; i<colls.length; i++) {
+	    			Path docPath = Paths.get(colls[i]);
+	    			Indexer indXr = new ConcurrentIndexer(iPath, docPath, openMode);
+	    			indexerList.add(indXr);
+	    			Runnable iTask = new RunnableIndexer(indXr);
+	        		executor.execute(iTask);
+	    		}
+			} else {
+				// con índices intermedios
+				indexes = cl.getOpt("-indexes1").split(" ");
+				String union = indexes[0];
+				if(indexes.length < colls.length+1) {
+					System.err.println("There are more document directories than index folders");
+					System.err.println(usage);
+					System.exit(1);
+				} else if(indexes.length > colls.length + 1) {
+					System.out.println("Ignoring " + (indexes.length-colls.length) + " excess index folders");
+				}
+				
+	    		for(int i=0; i<colls.length; i++) {
+	    			Path iPath = Paths.get(indexes[i+1]);
+	    			Path docPath = Paths.get(colls[i]);
+	    			Indexer indXr = new Indexer(iPath, docPath, openMode);
+	    			// indexerList.add(indXr);
+	    			Runnable iTask = new RunnableIndexer(indXr);
+	        		executor.execute(iTask);
+	    		}
+			}
+
     		try {
-    			openMode = OpenMode.valueOf(om);
-    		} catch (IllegalArgumentException e) {
-    			System.err.println("Invalid open mode specified");
-    			System.err.println(usage);
-    			System.exit(1);
+    			executor.shutdown();
+				while(!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+					
+				}
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+    		
+    		if(cl.hasOpt("-indexes1")) {
+    			IndexMerger.merge(indexes, openMode);
     		}
     	}
-
-    	final Path indexDir = Paths.get(index);
-    	final List<Path> docs = new ArrayList<Path>();
-    	for(String s: colls) {
-    		Path doc = Paths.get(s);
-            if (!Files.isReadable(doc)) {
-                System.err.println("Document directory '" + doc.toAbsolutePath() + "' does not exist or is not readable, please check the path");
-                System.exit(1);
-            }
-            docs.add(doc);
+    }
+    
+    public static void quering(CommandLine cl) {
+    	
+    }
+    
+    public static void rebuilding(CommandLine cl) {
+    	
+    }
+    
+    private static long calculateJobSize(String[] docs) throws IOException {
+    	long result = 0;
+    	for(String c : docs) {
+	    	result += Files.walk(new File(c).toPath())
+	        .map(f -> f.toFile())
+	        .filter(f -> f.isFile() && f.getName().endsWith(".sgm"))
+	        .mapToLong(f -> f.length()).sum(); // suma el tamaño de los archivos que terminen en .sgm
     	}
-    	try {
-	    	Indexer indexer = new Indexer(indexDir, docs.get(0), openMode);
-	    	indexer.index();
-	    	for(int i=1; i<docs.size(); i++) {
-	    		indexer = new Indexer(indexDir, docs.get(i), OpenMode.APPEND); // A partir de aquí, usamos APPEND para no sobreescribir
-	    		indexer.index();
-	    	}
-		} catch (IOException e) {
-			System.err.println("Falló la indexación :^(");
-		}
+		return result;
     }
 }
