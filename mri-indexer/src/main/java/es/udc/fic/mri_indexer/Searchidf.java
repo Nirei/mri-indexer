@@ -24,7 +24,7 @@ import org.apache.lucene.util.BytesRef;
 public class Searchidf {
 	private final Path indexFilePath;
 	private final String field;
-	private final int N = 21578; //MODIFICARLO
+	private int N = 21578; //Se modifica en ejecucion
 	private final int numeroTop;
 	private final boolean poor;
 	public Searchidf ( Path indexPath, String field, int top, boolean poor) {
@@ -41,7 +41,7 @@ public class Searchidf {
 			reader = DirectoryReader.open(FSDirectory.open(indexFilePath));
 			//IndexSearcher searcher = new IndexSearcher(reader);
 			//Analyzer analyzer = new StandardAnalyzer();
-			
+			N = reader.numDocs();
 			//Creando la lista de terminos y el iterador
 			
 			Fields fields = MultiFields.getFields(reader);
@@ -50,7 +50,6 @@ public class Searchidf {
 			List<String> topterms = new ArrayList<String>();
 			
 			 while (termsEnum.next() !=null){
-				 //termsEnum.next();
 				 //OBTENER IDF
 				 int df_T = termsEnum.docFreq();
 				 double idf = Math.log(N/df_T);

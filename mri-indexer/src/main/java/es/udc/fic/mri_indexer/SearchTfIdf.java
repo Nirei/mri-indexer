@@ -20,7 +20,7 @@ import org.apache.lucene.index.PostingsEnum;
 public class SearchTfIdf {
 	private final Path indexFilePath;
 	private final String field;
-	private final int N = 21578; // MODIFICARLO
+	private int N = 21578; // Se modifica en ejecucion
 	private final int numeroTop;
 	private final boolean poor;
 
@@ -30,12 +30,15 @@ public class SearchTfIdf {
 		this.field = field;
 		this.numeroTop = top;
 		this.poor = poor;
+		
 	}
 
 	public void calcularTfIdf() {
 		try {
 			IndexReader reader;
 			reader = DirectoryReader.open(FSDirectory.open(indexFilePath));
+			System.out.println("Numero de documentos: "+ reader.numDocs());
+			N = reader.numDocs();
 			Fields fields = MultiFields.getFields(reader);
 			Terms terms = fields.terms(field);
 			TermsEnum termsEnum = terms.iterator();
@@ -73,7 +76,7 @@ public class SearchTfIdf {
 						// Calculamos TFIDF
 						double tfidf = tf_doc * idf;
 						// Añadimos los valores a la lista.
-						termino = tfidf +" ( " + docx + ", " + nombrestring + " )" + " tf: " + tf_doc + " idf: " + idf;
+						termino = "TF*IDF: " +   tfidf +" ( docid: " + docx + ", termino: " + nombrestring + " )" + " tf: " + tf_doc + " idf: " + idf;
 						topDocs.add(termino);
 
 					}
