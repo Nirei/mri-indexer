@@ -49,4 +49,16 @@ public class ConcurrentIndexer extends Indexer {
 	public void index() throws IOException {
 		indexDocs(iWriter, docsPath);
 	}
+	
+	public static void closeIndexer(Path indexPath) {
+		if(indexMaps.containsKey(indexPath)) {
+			try {
+				indexMaps.get(indexPath).close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			System.err.println("Se ha intentando cerrar un indexer inexistente");
+		}
+	}
 }

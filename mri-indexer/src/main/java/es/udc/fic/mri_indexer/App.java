@@ -47,6 +47,8 @@ public class App {
     }
     
     public static void indexing(CommandLine cl) {
+    	Path index = null;
+		String[] indexes = null;
     	OpenMode openMode = OpenMode.CREATE_OR_APPEND;
     	
 		try {
@@ -63,7 +65,7 @@ public class App {
     		// single thread
     		Path coll = null;
 			coll = Paths.get(cl.getOpt("-coll"));
-			Path index = Paths.get(cl.getOpt("-index"));
+			index = Paths.get(cl.getOpt("-index"));
 			
 			Indexer indXr = new Indexer(index, coll, openMode);
 			try {
@@ -74,7 +76,6 @@ public class App {
 			
     	} else {
     		// multithread
-    		String[] indexes = null;
     		String[] colls = null;
 			colls = cl.getOpt("-colls").split(" ");
 			List<Indexer> indexerList = new ArrayList<>();
@@ -85,12 +86,11 @@ public class App {
 			
 			if(cl.hasOpt("-indexes2")) {
 				// sin índices intermedios
-				String index = cl.getOpt("-indexes2");
-    			Path iPath = Paths.get(index);
+				index = Paths.get(cl.getOpt("-indexes2"));
 
 				for(int i=0; i<colls.length; i++) {
 	    			Path docPath = Paths.get(colls[i]);
-	    			Indexer indXr = new ConcurrentIndexer(iPath, docPath, openMode);
+	    			Indexer indXr = new ConcurrentIndexer(index, docPath, openMode);
 	    			indexerList.add(indXr);
 	    			Runnable iTask = new RunnableIndexer(indXr);
 	        		executor.execute(iTask);
@@ -128,6 +128,10 @@ public class App {
     		
     		if(cl.hasOpt("-indexes1")) {
     			IndexMerger.merge(indexes, openMode);
+    		}
+    		
+    		if(cl.hasOpt("-indexes2")) {
+    			ConcurrentIndexer.closeIndexer(index);
     		}
     	}
     }
