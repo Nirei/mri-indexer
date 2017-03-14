@@ -90,12 +90,11 @@ public class SearchTfIdf {
 
 			// Mostrar los n mejores//peores
 			for (int j = 0; j < numeroTop && j < topDocs.size(); j++) {
-				System.out.println((j + 1) + ". " + topDocs.get(j));
+				System.out.println((j + 1) + ")  " + topDocs.get(j));
 
 			}
 
 		} catch (IOException e) {
-			System.err.println("Petadisima");
 			e.printStackTrace();
 		}
 

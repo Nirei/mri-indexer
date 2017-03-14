@@ -66,11 +66,10 @@ public class Searchidf {
 			 }
 			 //Mostrar los n mejores//peores
 			 for (int j = 0; j<numeroTop && j<topterms.size(); j++){
-				 System.out.println((j+1) + ". " + topterms.get(j));
+				 System.out.println((j+1) + ")  " + topterms.get(j));
 				
 			 }
 		}catch (IOException e){
-			System.err.println("Petadisima");
 			e.printStackTrace();
 		}
 	}
