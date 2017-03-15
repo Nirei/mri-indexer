@@ -13,7 +13,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.QueryParser;
 
 import es.udc.fic.mri_indexer.CommandLine.MissingArgumentException;
 
@@ -202,11 +204,22 @@ public class App {
 			System.out.println("No open mode specified, asumming CREATE_OR_APPEND");
 		}
 
+		
 		if (cl.hasOpt("-deldocsterm")) {
 			Term termino;
 			String[] argumentostemp = cl.getOpt("-deldocsterm").split(" ");
 			termino = new Term(argumentostemp[0], argumentostemp[1]);
-			DelDocsTerm deletedocuments = new DelDocsTerm(indexin, indexout, openMode, termino);
+			DelDocs deletedocuments = new DelDocs(indexin, indexout, openMode, termino);
+			deletedocuments.delete();
+
+		}
+		if (cl.hasOpt("-deldocsterm")) {
+			Term termino;
+			QueryParser queryParser = new QueryParser();
+			parser = new QueryParser("modelDescription", new StandardAnalyzer());
+			String[] argumentostemp = cl.getOpt("-deldocsterm").split(" ");
+			termino = new Term(argumentostemp[0], argumentostemp[1]);
+			DelDocs deletedocuments = new DelDocs(indexin, indexout, openMode, termino);
 			deletedocuments.delete();
 
 		}

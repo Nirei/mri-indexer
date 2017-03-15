@@ -17,18 +17,26 @@ import org.apache.lucene.index.Terms;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.search.Query;
 
-public class DelDocsTerm {
+public class DelDocs {
 
 	private final Path indexPath;
 	private final OpenMode openMode;
-	private final Term termino;
+	private Term termino;
 	private Path indexout;
+	private Query query;
 
-	public DelDocsTerm(Path indexPath, Path indexout, OpenMode openMode, Term termino) {
+	public DelDocs(Path indexPath, Path indexout, OpenMode openMode, Term termino) {
 		this.indexPath = indexPath;
 		this.openMode = openMode;
 		this.termino = termino;
+		this.indexout = indexout;
+	}
+	public DelDocs(Path indexPath, Path indexout, OpenMode openMode, Query termino) {
+		this.indexPath = indexPath;
+		this.openMode = openMode;
+		this.query = termino;
 		this.indexout = indexout;
 	}
 
