@@ -210,6 +210,10 @@ public class App {
 			deletedocuments.delete();
 
 		}
+		
+		if (cl.hasOpt("-mostsimilardoc_title")) {
+			
+		}
 
 	}
 
