@@ -6,7 +6,9 @@ import java.nio.file.Path;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Fields;
+import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.MultiFields;
@@ -31,27 +33,27 @@ public class DelDocsTerm {
 	}
 
 	public void delete() {
-		Directory dir;
-
+		Directory dirindex;
 		try {
+			dirindex = FSDirectory.open(indexPath);
 			if (indexout != null) {
-				try {
-					Copiar.copy(indexPath.toFile(), indexout.toFile());
-				} catch (IOException e) {
-					System.err.println("Error al copiar");
-					e.printStackTrace();
-				}
+				Directory dir;
 				dir = FSDirectory.open(indexout);
-			} else {
-				dir = FSDirectory.open(indexPath);
+				Analyzer analyzer = new StandardAnalyzer();
+				IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+				iwc.setOpenMode(openMode);
+				IndexWriter writer = new IndexWriter(dir, iwc);
+				writer.addIndexes(dirindex);
+				writer.deleteDocuments(termino);
+				writer.close();
+			}else {
+				Analyzer analyzer = new StandardAnalyzer();
+				IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
+				iwc.setOpenMode(openMode);
+				IndexWriter writer = new IndexWriter(dirindex, iwc);
+				writer.deleteDocuments(termino);
+				writer.close();
 			}
-
-			Analyzer analyzer = new StandardAnalyzer();
-			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
-			iwc.setOpenMode(openMode);
-			IndexWriter writer = new IndexWriter(dir, iwc);
-			writer.deleteDocuments(termino);
-			writer.close();
 		} catch (IOException e) {
 			System.err.println("Imposible crear IndexWriter en DelDocsTerm");
 			e.printStackTrace();
