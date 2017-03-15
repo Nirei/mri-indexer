@@ -57,16 +57,16 @@ public class SearchTfIdf {
 				// OBTENER POSTINNGS
 				PostingsEnum lista;
 				lista = termsEnum.postings(null, PostingsEnum.FREQS);
-				int id = lista.nextDoc();
 
 				if (lista != null) {
 					int docx;
 					while ((docx = lista.nextDoc()) != DocIdSetIterator.NO_MORE_DOCS) {
 
-						int tf_docAux; // Tf en el documento
+						double tf_docOrigen; // Tf en el documento
 						double tf_doc; // Calculo de tf con log
 						// OBTENEMOS EL TF
 						tf_doc = lista.freq();
+						tf_docOrigen = tf_doc;
 						if (tf_doc > 0) {
 							tf_doc = 1 + Math.log(tf_doc);
 
@@ -76,7 +76,7 @@ public class SearchTfIdf {
 						// Calculamos TFIDF
 						double tfidf = tf_doc * idf;
 						// Añadimos los valores a la lista.
-						termino = "TF*IDF: " +   tfidf +" ( docid: " + docx + ", termino: " + nombrestring + " )" + " tf: " + tf_doc + " idf: " + idf;
+						termino = "TF*IDF: " +   tfidf +" ( docid: " + docx + ", termino: " + nombrestring + " )" + " tf: " + tf_docOrigen + " idf: " + idf;
 						topDocs.add(termino);
 
 					}
