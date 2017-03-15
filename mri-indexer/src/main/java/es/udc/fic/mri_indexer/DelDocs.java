@@ -25,7 +25,7 @@ public class DelDocs {
 	private final OpenMode openMode;
 	private Term termino;
 	private Path indexout;
-	private Query query;
+	private Query query = null;
 
 	public DelDocs(Path indexPath, Path indexout, OpenMode openMode, Term termino) {
 		this.indexPath = indexPath;
@@ -52,14 +52,22 @@ public class DelDocs {
 				iwc.setOpenMode(openMode);
 				IndexWriter writer = new IndexWriter(dir, iwc);
 				writer.addIndexes(dirindex);
-				writer.deleteDocuments(termino);
+				if (query!=null){
+					writer.deleteDocuments(query);
+				}
+					else {writer.deleteDocuments(termino);
+				}
 				writer.close();
 			}else {
 				Analyzer analyzer = new StandardAnalyzer();
 				IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 				iwc.setOpenMode(openMode);
 				IndexWriter writer = new IndexWriter(dirindex, iwc);
-				writer.deleteDocuments(termino);
+				if (query!=null){
+					writer.deleteDocuments(query);
+				}
+					else {writer.deleteDocuments(termino);
+				}
 				writer.close();
 			}
 		} catch (IOException e) {
