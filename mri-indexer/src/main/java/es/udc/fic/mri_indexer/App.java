@@ -187,7 +187,7 @@ public class App {
 		indexin = Paths.get(cl.getOpt("-indexin"));
 		OpenMode openMode = OpenMode.CREATE_OR_APPEND;
 		if (cl.hasOpt("-indexout")) {
-			indexout = indexin = Paths.get(cl.getOpt("-indexout"));
+			indexout =  Paths.get(cl.getOpt("-indexout"));
 
 		} else
 			indexout = null;
