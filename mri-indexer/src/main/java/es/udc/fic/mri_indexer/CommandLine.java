@@ -117,11 +117,10 @@ class CommandLine {
 	 * a una operación de reconstrucción de índice (parte 3 de la práctica)
 	 */
 	public boolean isRebuilding() {
-		// TODO: Fixme
-		String[] rebuildingOpts1 = {"-nose","-que"};
-		String[] rebuildingOpts2 = {"-va","-aqui"};
-		String[] rebuildingOpts3 = {"-asi","-que"};
-		String[] rebuildingOpts4 = {"-ya","-luego"};
+		String[] rebuildingOpts1 = {"-indexin","-deldocsterm"};
+		String[] rebuildingOpts2 = {"-indexin","-deldocsquery"};
+		String[] rebuildingOpts3 = {"-indexin","-indexout","-mostsimilardoc_title"};
+		String[] rebuildingOpts4 = {"-indexin","-indexout","-mostsimilardoc_body"};
 		String[][] rebuildingOpts = {rebuildingOpts1, rebuildingOpts2, rebuildingOpts3, rebuildingOpts4};
 		return checkPresent(rebuildingOpts);
 	}

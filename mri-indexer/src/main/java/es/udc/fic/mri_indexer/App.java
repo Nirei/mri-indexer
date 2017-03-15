@@ -13,6 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
+import org.apache.lucene.index.Term;
 
 import es.udc.fic.mri_indexer.CommandLine.MissingArgumentException;
 
@@ -184,6 +185,35 @@ if(cl.hasOpt("-poor_tfidfterms")) {
     }
     
     public static void rebuilding(CommandLine cl) {
+       	Path indexin;
+    	Path indexout;
+    	indexin = Paths.get(cl.getOpt("-indexin"));
+    	OpenMode openMode = OpenMode.CREATE_OR_APPEND;
+    	if(cl.hasOpt("-indexout")) {
+    		indexout = indexin = Paths.get(cl.getOpt("-indexout"));
+    		
+    	}else indexout = null;
+    	
+		try {
+			openMode = OpenMode.valueOf(cl.checkOpt("-om"));
+		} catch (IllegalArgumentException e) {
+			System.err.println("Invalid open mode specified");
+			System.err.println(usage);
+			System.exit(1);
+		} catch (MissingArgumentException e) {
+			System.out.println("No open mode specified, asumming CREATE_OR_APPEND");
+		}
+    	
+    	
+    	
+    	if(cl.hasOpt("-deldocsterm")) {
+    		Term termino;
+    		String [] argumentostemp = cl.getOpt("-deldocsterm").split(" ");
+    		termino  = new Term (argumentostemp[0],argumentostemp[1]);
+    		DelDocsTerm deletedocuments = new DelDocsTerm(indexin,indexout,openMode,termino);
+    		deletedocuments.delete();
+    		
+    	}
     	
     }
     
