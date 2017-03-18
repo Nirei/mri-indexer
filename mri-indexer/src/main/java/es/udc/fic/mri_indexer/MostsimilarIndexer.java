@@ -143,10 +143,10 @@ public class MostsimilarIndexer {
 			Analyzer analyzer = new StandardAnalyzer();
 			IndexWriterConfig iwc = new IndexWriterConfig(analyzer);
 			iwc.setOpenMode(OpenMode.CREATE);
-			IndexWriter ramWriter = new IndexWriter(ramDir, iwc);
-			
-			ramWriter.addDocument(reader.document(id));
-			ramWriter.commit();
+			try(IndexWriter ramWriter = new IndexWriter(ramDir, iwc)) {
+				ramWriter.addDocument(reader.document(id));
+				ramWriter.commit();
+			}
 			
 			IndexReader ramReader = DirectoryReader.open(ramDir);
 			
@@ -177,7 +177,7 @@ public class MostsimilarIndexer {
 			
 			System.out.println("Most similar docs for " + id);
 			for(ScoreDoc sd : docs.scoreDocs) {
-				System.out.println("id: " + sd.doc + " score:" + sd.score);
+				System.out.println("source: " + id + " id: " + sd.doc + " score: " + sd.score);
 			}
 			return 0;
 		}
