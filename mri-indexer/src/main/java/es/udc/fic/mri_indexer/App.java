@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,11 +19,8 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 
 import es.udc.fic.mri_indexer.CommandLine.MissingArgumentException;
+import es.udc.fic.mri_indexer.MostsimilarIndexer.SimilarField;
 
-/**
- * Hello world!
- *
- */
 public class App {
 
 	final static String usage = "java es.udc.fic.mri_indexer.IndexFiles"
@@ -186,15 +182,15 @@ public class App {
 	}
 
 	public static void rebuilding(CommandLine cl) {
-		Path indexin;
-		Path indexout;
-		indexin = Paths.get(cl.getOpt("-indexin"));
+		Path indexIn;
+		Path indexOut;
+		indexIn = Paths.get(cl.getOpt("-indexin"));
 		OpenMode openMode = OpenMode.CREATE_OR_APPEND;
 		if (cl.hasOpt("-indexout")) {
-			indexout =  Paths.get(cl.getOpt("-indexout"));
+			indexOut =  Paths.get(cl.getOpt("-indexout"));
 
 		} else
-			indexout = null;
+			indexOut = null;
 
 		try {
 			openMode = OpenMode.valueOf(cl.checkOpt("-om"));
@@ -211,7 +207,7 @@ public class App {
 			Term termino;
 			String[] argumentostemp = cl.getOpt("-deldocsterm").split(" ");
 			termino = new Term(argumentostemp[0], argumentostemp[1]);
-			DelDocs deletedocuments = new DelDocs(indexin, indexout, openMode, termino);
+			DelDocs deletedocuments = new DelDocs(indexIn, indexOut, openMode, termino);
 			deletedocuments.delete();
 
 		}
@@ -221,7 +217,7 @@ public class App {
 			Query query;
 			try {
 				query = queryParser.parse(querystring);
-				DelDocs deletedocuments = new DelDocs(indexin, indexout, openMode, query);
+				DelDocs deletedocuments = new DelDocs(indexIn, indexOut, openMode, query);
 				deletedocuments.delete();
 			} catch (ParseException e) {
 				System.err.println("No se pudo parsear la query");
@@ -230,9 +226,30 @@ public class App {
 		}
 		
 		if (cl.hasOpt("-mostsimilardoc_title")) {
-			
+			String[] argum = cl.getOpt("-mostsimilardoc_title").split(" ");
+			if(argum.length != 2) {
+				System.err.println("Argumentos inválidos para -mostsimilardoc_title");
+				System.err.println(usage);
+				System.exit(0);
+			}
+			int nterms = Integer.parseInt(argum[0]);
+			int hilos = Integer.parseInt(argum[1]);
+			MostsimilarIndexer mSI = new MostsimilarIndexer(indexIn, indexOut, SimilarField.TITLE_FIELD, hilos, nterms);
+			mSI.recreate();
 		}
 
+		if (cl.hasOpt("-mostsimilardoc_body")) {
+			String[] argum = cl.getOpt("-mostsimilardoc_title").split(" ");
+			if(argum.length != 2) {
+				System.err.println("Argumentos inválidos para -mostsimilardoc_title");
+				System.err.println(usage);
+				System.exit(0);
+			}
+			int nterms = Integer.parseInt(argum[0]);
+			int hilos = Integer.parseInt(argum[1]);
+			MostsimilarIndexer mSI = new MostsimilarIndexer(indexIn, indexOut, SimilarField.BODY_FIELD, hilos, nterms);
+			mSI.recreate();
+		}
 	}
 
 	private static long calculateJobSize(String[] docs) throws IOException {

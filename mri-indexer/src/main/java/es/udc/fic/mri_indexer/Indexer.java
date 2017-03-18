@@ -18,9 +18,11 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexOptions;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
@@ -79,6 +81,20 @@ public class Indexer {
 		}
 	}
 
+	/* Indexed, tokenized, stored. */
+	public static final FieldType TYPE_STORED = new FieldType();
+
+	static final IndexOptions options = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS;
+
+	static {
+		TYPE_STORED.setIndexOptions(options);
+		TYPE_STORED.setTokenized(true);
+		TYPE_STORED.setStored(true);
+		TYPE_STORED.setStoreTermVectors(true);
+		TYPE_STORED.setStoreTermVectorPositions(true);
+		TYPE_STORED.freeze();
+	}
+	
 	protected void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
 		String hostname = execReadToString("hostname");
 
@@ -107,9 +123,9 @@ public class Indexer {
 				doc.add(orderField);
 				// Campos propios del artículo
 				int i = 0;
-				Field titleField = new TextField("title", art.get(i++), Store.NO);
+				Field titleField = new Field("title", art.get(i++), TYPE_STORED);
 				doc.add(titleField);
-				Field bodyField = new TextField("body", art.get(i++), Store.NO);
+				Field bodyField = new Field("body", art.get(i++), TYPE_STORED);
 				doc.add(bodyField);
 				Field topicsField = new TextField("topics", art.get(i++), Store.NO);
 				doc.add(topicsField);
