@@ -17,9 +17,9 @@ public final class TermTools {
 	
 	public static Map<String, Integer> getTermFrequencies(IndexReader reader, int docId, String field) throws IOException {
 		Terms vector = reader.getTermVector(docId, field);
+		if(vector==null) System.err.println("vector is null for docId " + docId + " and field: " + field);
 
-		TermsEnum termsEnum = null;
-		termsEnum = vector.iterator();
+		TermsEnum termsEnum =  vector.iterator();
 		Map<String, Integer> frequencies = new HashMap<>();
 		BytesRef text = null;
 		while ((text = termsEnum.next()) != null) {

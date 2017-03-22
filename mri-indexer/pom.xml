@@ -31,17 +31,20 @@
 	     <configuration>
 	      <mainClass>es.udc.fic.mri_indexer.App</mainClass>
 	      <arguments>
-	       <argument>-index</argument> <!-- 
-	       <argument>index</argument>
-	       <argument>-coll</argument>
-	       <argument>collection</argument> -->
-	       <argument>-indexin</argument>
+	       <argument>-indexes2</argument>
+	       <argument>indexes2c0withITime</argument>
+	       <argument>-colls</argument>
+	       <argument>c1</argument>
+	       <argument>c2</argument>
+	       <argument>c3</argument>
+	       <argument>c4</argument> <!--
+	       <argument>-indexin</argument> 
 	       <argument>index</argument>
 	       <argument>-indexout</argument>
 	       <argument>simindex</argument>
 	       <argument>-mostsimilardoc_title</argument>
 	       <argument>3</argument>
-	       <argument>8</argument>
+	       <argument>8</argument>  --> 
 	      </arguments>
 	     </configuration>
 	    </execution>

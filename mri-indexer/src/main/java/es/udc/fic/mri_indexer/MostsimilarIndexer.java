@@ -15,6 +15,9 @@ import java.util.stream.Collectors;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.StringField;
+import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
@@ -38,6 +41,7 @@ import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.apache.lucene.store.RAMDirectory;
 
+import es.udc.fic.mri_indexer.util.CustomFields;
 import es.udc.fic.mri_indexer.util.TermTools;
 
 /**
@@ -133,6 +137,8 @@ public class MostsimilarIndexer {
 					reindex(id, mostSimilar);
 				} catch (IOException e) {
 					System.err.println("Imposible acceder al documento " + id);
+				} catch (Exception e) {
+					System.err.println("No se pudo procesar el documento " + id);
 				}
 		}
 		
@@ -172,18 +178,31 @@ public class MostsimilarIndexer {
 					builder.add(bc);
 				}
 			}
+
 			Query q = builder.build();
 			TopDocs docs = searcher.search(q, 2);
 			
-			System.out.println("Most similar docs for " + id);
+			int result = -1;
 			for(ScoreDoc sd : docs.scoreDocs) {
-				System.out.println("source: " + id + " id: " + sd.doc + " score: " + sd.score);
+				if(id != sd.doc) { 
+					result = sd.doc;
+					System.out.println("Most similar to " + id + " is " + sd.doc);
+				}
 			}
-			return 0;
+			return result;
 		}
 		
-		void reindex(int id, int mostSimilar) {
-			System.err.println("Reindexing not yet implemented");
+		void reindex(int id, int mostSimilar) throws IOException {
+			Field simPath = new Field("SimPathSgm",reader.document(mostSimilar).get("path"),CustomFields.TYPE_STORED);
+			Field simTitle = new Field("SimTitle",reader.document(mostSimilar).get("title"),CustomFields.TYPE_STORED);
+			Field simBody = new Field("SimBody",reader.document(mostSimilar).get("body"),CustomFields.TYPE_STORED);
+			
+			Document doc = reader.document(id);
+			doc.add(simPath);
+			doc.add(simTitle);
+			doc.add(simBody);
+			
+			writer.addDocument(doc);
 		}
 	}
 	

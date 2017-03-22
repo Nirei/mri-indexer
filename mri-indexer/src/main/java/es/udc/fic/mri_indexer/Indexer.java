@@ -9,6 +9,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Scanner;
@@ -16,20 +19,21 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.document.DateTools;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
-import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.Field.Store;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
-import org.apache.lucene.index.IndexOptions;
+import org.apache.lucene.document.DateTools.Resolution;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.index.IndexWriterConfig.OpenMode;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
-
 import es.udc.fic.mri_indexer.parsers.Reuters21578Parser;
+import es.udc.fic.mri_indexer.util.CustomFields;
 
 public class Indexer {
 
@@ -80,20 +84,6 @@ public class Indexer {
 			indexDoc(writer, path, Files.getLastModifiedTime(path).toMillis());
 		}
 	}
-
-	/* Indexed, tokenized, stored. */
-	public static final FieldType TYPE_STORED = new FieldType();
-
-	static final IndexOptions options = IndexOptions.DOCS_AND_FREQS_AND_POSITIONS_AND_OFFSETS;
-
-	static {
-		TYPE_STORED.setIndexOptions(options);
-		TYPE_STORED.setTokenized(true);
-		TYPE_STORED.setStored(true);
-		TYPE_STORED.setStoreTermVectors(true);
-		TYPE_STORED.setStoreTermVectorPositions(true);
-		TYPE_STORED.freeze();
-	}
 	
 	protected void indexDoc(IndexWriter writer, Path file, long lastModified) throws IOException {
 		String hostname = execReadToString("hostname");
@@ -123,9 +113,9 @@ public class Indexer {
 				doc.add(orderField);
 				// Campos propios del artículo
 				int i = 0;
-				Field titleField = new Field("title", art.get(i++), TYPE_STORED);
+				Field titleField = new Field("title", art.get(i++), CustomFields.TYPE_STORED);
 				doc.add(titleField);
-				Field bodyField = new Field("body", art.get(i++), TYPE_STORED);
+				Field bodyField = new Field("body", art.get(i++), CustomFields.TYPE_STORED);
 				doc.add(bodyField);
 				Field topicsField = new TextField("topics", art.get(i++), Store.NO);
 				doc.add(topicsField);
@@ -141,6 +131,12 @@ public class Indexer {
 				Field dateField = new StringField("date", date, Store.NO);
 				doc.add(dateField);
 				
+				Instant now = Instant.now();
+				Date dateNow = Date.from(now);
+				Field indexedDate = new LongPoint("msIndexed", dateNow.getTime());
+				Field stringDate = new TextField("dateIndexed", DateTools.dateToString(dateNow, Resolution.MILLISECOND), Store.YES);
+				doc.add(indexedDate);
+				doc.add(stringDate);
 				//System.out.println(titleField.stringValue() + " " + topicsField.stringValue() + " " + datelineField.stringValue() + " " + dateField.stringValue());
 				writer.addDocument(doc);
 			}
